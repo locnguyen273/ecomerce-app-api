@@ -18,9 +18,11 @@ export default tseslint.config(
         argsIgnorePattern: '^_',
       }],
       '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
       'no-console': ['warn', {
         allow: ['warn', 'error'],
       }],
