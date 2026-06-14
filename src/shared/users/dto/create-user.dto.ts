@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+// import { UserDocument } from '@database/schemas/user.schema';
 
-export class RegisterDto {
-  @ApiProperty({ example: 'test@gmail.com' })
+export class CreateUserDto {
+  @ApiProperty()
   @IsEmail()
   email!: string;
 
@@ -10,7 +11,13 @@ export class RegisterDto {
   @IsNotEmpty()
   username!: string;
 
-  @ApiProperty({ example: 'password123' })
+  @ApiProperty()
   @MinLength(6)
   password!: string;
 }
+
+export type CreateUserResponse = {
+  message: string;
+  // user: UserDocument;
+  data: any;
+};

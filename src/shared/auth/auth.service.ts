@@ -37,7 +37,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException();
     }
-    const isMatch = await bcrypt.compare(dto.password, user.password);
+    const isMatch = await bcrypt.compare(dto.password, user.password as string);
     if (!isMatch) {
       throw new UnauthorizedException();
     }
