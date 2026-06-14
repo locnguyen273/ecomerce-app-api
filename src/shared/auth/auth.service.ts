@@ -55,6 +55,6 @@ export class AuthService {
   }
 
   async validateUser(userId: string): Promise<UserDocument | null> {
-    return this.usersService.findById(userId);
+    return await this.usersService.findOne(userId);
   }
 }

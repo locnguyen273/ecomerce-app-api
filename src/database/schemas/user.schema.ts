@@ -52,6 +52,7 @@ export class User {
     unique: true,
     lowercase: true,
     trim: true,
+    index: true,
   })
   email?: string;
 
@@ -109,14 +110,11 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// UserSchema.index({ email: 1 });
-// UserSchema.index({ role: 1 });
+UserSchema.index({
+  name: 'text',
+  email: 'text',
+});
 
-// UserSchema.set('toJSON', {
-//   virtuals: true,
-//   transform: (_, ret) => {
-//     delete ret.password;
-//     delete ret.__v;
-//     return ret;
-//   },
-// });
+UserSchema.index({
+  deletedAt: 1,
+});

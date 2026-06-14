@@ -1,27 +1,22 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from '@database/schemas/user.schema';
-import { CreateUserDto, CreateUserResponse } from '@shared/users/dto/create-user.dto';
+import { UsersRepository } from '@/common/repositories/users.repository';
+import { CreateUserDto } from '@shared/users/dto/create-user.dto';
 import { QueryUserDto } from '@shared/users/dto/query-user.dto';
 import { UpdateUserDto } from '@shared/users/dto/update-user.dto';
+import { UserDocument } from '@database/schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name)
-    private userModel: Model<User>,
-  ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
-  async create(dto: CreateUserDto): Promise<CreateUserResponse> {
-    const existUser = await this.userModel.findOne({ email: dto.email });
-
-    if (existUser) {
+  async create(dto: CreateUserDto): Promise<{message: string; data: UserDocument}> {
+    const existingUser = await this.usersRepository.findByEmail(dto.email);
+    if (existingUser) {
       throw new BadRequestException('Email already exists');
     }
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = await this.userModel.create({
+    const user = await this.usersRepository.create({
       ...dto,
       password: hashedPassword,
     });
@@ -31,59 +26,76 @@ export class UsersService {
     };
   }
 
-  async findAll(query: QueryUserDto): Promise<{ data: UserDocument[]; meta: any }> {
+  async findAll(query: QueryUserDto): Promise<{
+    data: UserDocument[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      lastPage: number;
+    };
+  }> {
     const { page = 1, limit = 10, search } = query;
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
+        {
+          name: {
+            $regex: search,
+            $options: 'i',
+          },
+        },
+        {
+          email: {
+            $regex: search,
+            $options: 'i',
+          },
+        },
       ];
     }
-
     const skip = (page - 1) * limit;
-
-    const [data, total] = await Promise.all([
-      this.userModel.find(filter).skip(skip).limit(limit).exec(),
-      this.userModel.countDocuments(filter),
+    const [users, total] = await Promise.all([
+      this.usersRepository.findMany(filter, skip, limit),
+      this.usersRepository.count(filter),
     ]);
-
     return {
-      data,
+      data: users,
       meta: {
         total,
         page,
+        limit,
         lastPage: Math.ceil(total / limit),
       },
     };
   }
 
-  async findByEmail(email: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ email });
-  }
-
-  async findOne(id: string): Promise<UserDocument | null> {
-    const user = await this.userModel.findById(id);
-    if (!user) throw new NotFoundException('User not found');
+  async findOne(id: string): Promise<UserDocument> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return user;
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<UserDocument | null> {
-    const user = await this.userModel.findByIdAndUpdate(id, dto, {
-      new: true,
-    });
-
-    if (!user) throw new NotFoundException('User not found');
+  async update(id: string, dto: UpdateUserDto): Promise<UserDocument> {
+    const user = await this.usersRepository.update(id, dto);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return user;
   }
 
   async remove(id: string): Promise<{ message: string }> {
-    const user = await this.userModel.findByIdAndDelete(id);
-    if (!user) throw new NotFoundException('User not found');
-    return { message: 'Deleted successfully' };
+    const user = await this.usersRepository.delete(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      message: 'Deleted successfully',
+    };
   }
 
-  findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id);
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.usersRepository.findByEmail(email);
   }
 }
