@@ -7,19 +7,23 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtUser } from '@/common/interfaces/user.interface';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from '@/common/decorators/public.decorator';
+import { UserDocument } from '@database/schemas/user.schema';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
-  register(@Body() dto: RegisterDto): Promise<{ message: string; user: any }> {
+  register(@Body() dto: RegisterDto): Promise<UserDocument> {
     return this.authService.register(dto);
   }
 
+  @Public()
   @Post('login')
-  login(@Body() dto: LoginDto): Promise<{ accessToken: string; user: any }> {
+  login(@Body() dto: LoginDto): Promise<{ accessToken: string}> {
     return this.authService.login(dto);
   }
 

@@ -1,13 +1,8 @@
+import { UserRole } from '@/common/constants/role.constant';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
-
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  SELLER = 'SELLER',
-}
 
 export enum AuthProvider {
   LOCAL = 'LOCAL',

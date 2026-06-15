@@ -2,44 +2,40 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-import { UsersService } from '@shared/users/users.service';
 import { LoginDto } from '@shared/auth/dto/login.dto';
 import { RegisterDto } from '@shared/auth/dto/register.dto';
 import { UserDocument } from '@database/schemas/user.schema';
+import { UsersRepository } from '@/common/repositories/users.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ message: string; user: any }> {
-    const existUser = await this.usersService.findByEmail(dto.email);
-
+  async register(dto: RegisterDto): Promise<UserDocument> {
+    const existUser = await this.usersRepository.findByEmail(dto.email);
     if (existUser) {
       throw new BadRequestException('Email already exists');
     }
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = await this.usersService.create({
+    const user = await this.usersRepository.create({
       email: dto.email,
       username: dto.username,
       password: hashedPassword,
     });
-    return {
-      message: 'Register success',
-      user,
-    };
+    return user;
   }
 
-  async login(dto: LoginDto): Promise<{ accessToken: string; user: any }> {
-    const user = await this.usersService.findByEmail(dto.email);
-    if (!user) {
-      throw new UnauthorizedException();
+  async login(dto: LoginDto): Promise<{ accessToken: string}> {
+    const user = await this.usersRepository.findByEmail(dto.email) as UserDocument;
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    const isMatch = await bcrypt.compare(dto.password, user.password as string);
+    const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid credentials');
     }
     const payload = {
       sub: user._id,
@@ -48,13 +44,10 @@ export class AuthService {
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
-    return {
-      accessToken,
-      user,
-    };
+    return { accessToken };
   }
 
   async validateUser(userId: string): Promise<UserDocument | null> {
-    return await this.usersService.findOne(userId);
+    return await this.usersRepository.findById(userId);
   }
 }

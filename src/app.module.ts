@@ -3,6 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { DatabaseModule } from '@database/database.module';
 import { SharedModule } from '@shared/shared.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -22,6 +25,15 @@ import { SharedModule } from '@shared/shared.module';
     SharedModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

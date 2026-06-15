@@ -11,6 +11,8 @@ export function ConfigSwagger(app: INestApplication): void {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
+        description: 'Enter JWT access token',
+        in: 'header',
       },
       'access-token',
     )
