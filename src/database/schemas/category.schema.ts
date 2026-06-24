@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type CategoryDocument = HydratedDocument<Category>;
 
@@ -25,29 +25,17 @@ export class Category {
   @Prop()
   description?: string;
 
-  @Prop()
-  image?: string;
-
   @Prop({
     default: true,
   })
   isActive!: boolean;
 
   @Prop({
+    type: Types.ObjectId,
+    ref: Category.name,
     default: null,
   })
-  parentId?: string | null;
-
-  @Prop({
-    default: 0,
-  })
-  level!: number;
-
-  @Prop({
-    type: [String],
-    default: [],
-  })
-  path!: string[];
+  parentId?: Types.ObjectId;
 
   @Prop({
     default: 0,
@@ -59,11 +47,6 @@ export class Category {
 
   @Prop()
   seoDescription?: string;
-
-  @Prop({
-    default: null,
-  })
-  deletedAt?: Date | null;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

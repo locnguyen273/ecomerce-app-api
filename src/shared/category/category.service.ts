@@ -4,84 +4,101 @@ import { CategoryRepository } from '@/common/repositories/category.repository';
 import { CreateCategoryDto } from '@shared/category/dto/create-category.dto';
 import { QueryCategoryDto } from '@shared/category/dto/query-category.dto';
 import { UpdateCategoryDto } from '@shared/category/dto/update-category.dto';
+import { CategoryDocument } from '@database/schemas/category.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
 
-  async create(dto: CreateCategoryDto) {
+  async create(dto: CreateCategoryDto): Promise<{ message: string; data: CategoryDocument }> {
     const slug = slugify(dto.name, {
       lower: true,
       strict: true,
     });
-
     const existed = await this.categoryRepository.findOne({
       slug,
     });
-
     if (existed) {
       throw new BadRequestException('Category already exists');
     }
-
-    return this.categoryRepository.create({
+    const category = await this.categoryRepository.create({
       ...dto,
       slug,
+      parentId: dto.parentId ? new Types.ObjectId(dto.parentId) : undefined,
     });
+    return {
+      message: 'Create category success',
+      data: category,
+    };
   }
 
-  async findAll(query: QueryCategoryDto) {
-    const page = Number(query.page);
-    const limit = Number(query.limit);
-
-    const filter: Record<string, unknown> = {
-      deletedAt: null,
+  async findAll(query: QueryCategoryDto): Promise<{
+    data: CategoryDocument[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      lastPage: number;
     };
-
-    if (query.keyword) {
-      filter.name = {
-        $regex: query.keyword,
-        $options: 'i',
-      };
+  }> {
+    const { page = 1, limit = 10, search } = query;
+    const filter: Record<string, unknown> = {};
+    if (search) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search,
+            $options: 'i',
+          },
+        },
+        {
+          email: {
+            $regex: search,
+            $options: 'i',
+          },
+        },
+      ];
     }
-
-    const [items, total] = await Promise.all([
-      this.categoryRepository
-        .paginate(filter)
-        .skip((page - 1) * limit)
-        .limit(limit),
-
+    const skip = (page - 1) * limit;
+    const [categories, total] = await Promise.all([
+      this.categoryRepository.findMany(filter, skip, limit),
       this.categoryRepository.count(filter),
     ]);
-
     return {
-      items,
-      total,
-      page,
-      limit,
+      data: categories,
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      },
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<CategoryDocument> {
     const category = await this.categoryRepository.findById(id);
-
     if (!category) {
       throw new NotFoundException('Category not found');
     }
-
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto) {
+  async update(id: string, dto: UpdateCategoryDto): Promise<CategoryDocument> {
     const category = await this.categoryRepository.update(id, dto);
-
     if (!category) {
-      throw new NotFoundException();
+      throw new NotFoundException('Category not found');
     }
-
     return category;
   }
 
-  async remove(id: string) {
-    return this.categoryRepository.softDelete(id);
+  async remove(id: string): Promise<{ message: string }> {
+    const category = await this.categoryRepository.delete(id);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+    return {
+      message: 'Deleted successfully',
+    };
   }
 }

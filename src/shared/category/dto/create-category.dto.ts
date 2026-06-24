@@ -1,22 +1,25 @@
-import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateCategoryDto {
+  @ApiProperty()
   @IsString()
   @MaxLength(100)
   name!: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   description?: string;
 
   @IsOptional()
-  @IsString()
-  image?: string;
+  @IsMongoId()
+  @Transform(({ value }) => (value ? new Types.ObjectId(value as string) : undefined))
+  parentId?: Types.ObjectId;
 
-  @IsOptional()
-  @IsString()
-  parentId?: string;
-
+  @ApiProperty()
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

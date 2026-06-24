@@ -18,6 +18,10 @@ export class CategoryRepository {
     return this.categoryModel.findOne(filter);
   }
 
+  findMany(filter: Record<string, any>, skip: number, limit: number): Promise<CategoryDocument[]> {
+    return this.categoryModel.find(filter).skip(skip).limit(limit).exec();
+  }
+
   findById(id: string): Promise<CategoryDocument | null> {
     return this.categoryModel.findById(id);
   }
@@ -28,14 +32,8 @@ export class CategoryRepository {
     });
   }
 
-  softDelete(id: string): Promise<CategoryDocument | null> {
-    return this.categoryModel.findByIdAndUpdate(
-      id,
-      {
-        deletedAt: new Date(),
-      },
-      { new: true },
-    );
+  delete(id: string): Promise<CategoryDocument | null> {
+    return this.categoryModel.findByIdAndDelete(id).exec();
   }
 
   paginate(filter: Record<string, any>): Query<CategoryDocument[], CategoryDocument> {
@@ -43,6 +41,6 @@ export class CategoryRepository {
   }
 
   count(filter: Record<string, any>): Promise<number> {
-  return this.categoryModel.countDocuments(filter);
-}
+    return this.categoryModel.countDocuments(filter);
+  }
 }

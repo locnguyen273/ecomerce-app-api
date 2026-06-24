@@ -1,17 +1,24 @@
-import { IsNumberString, IsOptional, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsNumber, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class QueryCategoryDto {
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsNumberString()
-  page?: string = '1';
+  @Type(() => Number)
+  @IsNumber()
+  page?: number = 1;
 
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsNumberString()
-  limit?: string = '10';
+  @Type(() => Number)
+  @IsNumber()
+  limit?: number = 10;
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  keyword?: string;
+  search?: string;
 
   @IsOptional()
   @IsString()
