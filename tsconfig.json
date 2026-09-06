@@ -23,7 +23,9 @@
       "@config/*": ["./src/config/*"],
       "@shared/*": ["./src/shared/*"],
       "@database/*": ["./src/database/*"],
+      "@common/*": ["./src/common/*"],
       "@/*": ["./src/*"],
-    }
+    },
+    "types": ["node", "express", "multer"]
   }
 }

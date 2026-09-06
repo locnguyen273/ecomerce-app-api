@@ -103,3 +103,6 @@ NODE_ENV="development"
 PORT=5000
 DATABASE_URL="mongodb://localhost:27017/ecommerce-database-app"
 JWT_SECRET="super-secret-key-ecommerce-app-8386"
+CLOUDINARY_CLOUD_NAME=dymphuori
+CLOUDINARY_API_KEY=194565568699228
+CLOUDINARY_API_SECRET=5Krh_UeXj5ZIc_XMp2R8ZElKjts

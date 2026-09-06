@@ -3,40 +3,213 @@ import { HydratedDocument } from 'mongoose';
 
 export type ProductDocument = HydratedDocument<Product>;
 
-@Schema({ timestamps: true })
+@Schema({
+  _id: false,
+})
+export class ProductImage {
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  url!: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  publicId!: string;
+
+  @Prop({
+    trim: true,
+  })
+  alt?: string;
+}
+
+export const ProductImageSchema = SchemaFactory.createForClass(ProductImage);
+
+@Schema({
+  timestamps: true,
+  collection: 'products',
+})
 export class Product {
-  @Prop({ required: true, trim: true })
-  name?: string;
+  // =====================
+  // BASIC INFORMATION
+  // =====================
 
-  @Prop({ required: true })
-  description?: string;
+  @Prop({
+    required: true,
+    trim: true,
+    index: true,
+  })
+  name!: string;
 
-  @Prop({ required: true })
-  price?: number;
+  @Prop({
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    index: true,
+  })
+  slug!: string;
 
-  @Prop({ default: 0 })
-  discountPrice?: number;
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  description!: string;
 
-  @Prop({ default: 0 })
-  stock?: number;
+  @Prop({
+    trim: true,
+  })
+  shortDescription?: string;
 
-  @Prop([String])
-  images?: string[];
+  // =====================
+  // PRICE
+  // =====================
 
-  @Prop({ default: true })
-  isActive?: boolean;
+  @Prop({
+    required: true,
+    min: 0,
+    index: true,
+  })
+  price!: number;
 
-  @Prop({ index: true })
-  categoryId?: string;
+  @Prop({
+    default: 0,
+    min: 0,
+  })
+  discountPrice!: number;
 
-  @Prop({ index: true })
+  // =====================
+  // STOCK
+  // =====================
+
+  @Prop({
+    default: 0,
+    min: 0,
+    index: true,
+  })
+  stock!: number;
+
+  // =====================
+  // IMAGE
+  // =====================
+
+  @Prop({
+    type: [ProductImageSchema],
+    default: [],
+  })
+  images!: ProductImage[];
+
+  // =====================
+  // CATEGORY / BRAND
+  // =====================
+
+  @Prop({
+    required: true,
+    index: true,
+  })
+  categoryId!: string;
+
+  @Prop({
+    trim: true,
+    index: true,
+  })
   brand?: string;
 
-  @Prop({ default: 0 })
-  rating?: number;
+  // =====================
+  // STATUS
+  // =====================
 
-  @Prop({ default: 0 })
-  soldCount?: number;
+  @Prop({
+    default: true,
+    index: true,
+  })
+  isActive!: boolean;
+
+  @Prop({
+    default: false,
+    index: true,
+  })
+  isFeatured!: boolean;
+
+  // =====================
+  // RATING
+  // =====================
+
+  @Prop({
+    default: 0,
+    min: 0,
+    max: 5,
+  })
+  rating!: number;
+
+  @Prop({
+    default: 0,
+  })
+  reviewCount!: number;
+
+  @Prop({
+    default: 0,
+    index: true,
+  })
+  soldCount!: number;
+
+  // =====================
+  // SEO
+  // =====================
+
+  @Prop({
+    trim: true,
+    maxLength: 60,
+  })
+  metaTitle?: string;
+
+  @Prop({
+    trim: true,
+    maxLength: 160,
+  })
+  metaDescription?: string;
+
+  @Prop({
+    type: [String],
+    default: [],
+  })
+  metaKeywords!: string[];
+
+  // =====================
+  // SOFT DELETE
+  // =====================
+
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  deletedAt?: Date | null;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+
+// ProductSchema.index({
+//   name: 'text',
+//   description: 'text',
+//   brand: 'text',
+// });
+
+// ProductSchema.index({
+//   categoryId: 1,
+//   isActive: 1,
+//   deletedAt: 1,
+// });
+
+// ProductSchema.index({
+//   price: 1,
+// });
+
+// ProductSchema.index({
+//   soldCount: -1,
+// });
+
+// ProductSchema.index({
+//   createdAt: -1,
+// });
